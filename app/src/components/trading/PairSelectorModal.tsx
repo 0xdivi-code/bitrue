@@ -7,6 +7,7 @@ import { pairMarketStore, mkKey } from '../../services/marketDataService';
 import { useTopMarkets } from '../../hooks/useTopMarkets';
 import type { ExchangeId, MarketType } from '../../types/marketDataTypes';
 import { cn, formatNumber, formatPct } from '../../utils/format';
+import { sortByImportance } from '../../utils/importance';
 
 /** Venue-catalog market selector: search + quote filter + trading-rule hints. */
 export function PairSelectorModal({
@@ -34,10 +35,10 @@ export function PairSelectorModal({
 
   const rows = useMemo(() => {
     const needle = query.trim().toUpperCase();
-    return instruments
+    return sortByImportance(instruments, (base) => bySymbol.get(base)?.rank, exchange)
       .filter((i) => (quote === 'ALL' || i.quote === quote) && (!needle || `${i.base}/${i.quote}`.includes(needle)))
       .slice(0, 240);
-  }, [instruments, query, quote]);
+  }, [instruments, query, quote, bySymbol, exchange]);
 
   const priceOf = (pair: string, base: string) => {
     const cached = pairMarketStore.getState(mkKey(exchange, marketType, pair)).ticker;

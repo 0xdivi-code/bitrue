@@ -6,6 +6,7 @@ import { useTopMarkets } from '../../hooks/useTopMarkets';
 import { pairMarketStore, mkKey } from '../../services/marketDataService';
 import type { ExchangeId, InstrumentMeta, MarketType } from '../../types/marketDataTypes';
 import { cn, formatNumber, formatPct } from '../../utils/format';
+import { sortByImportance } from '../../utils/importance';
 
 export interface PairSidebarProps {
   activePair: string;
@@ -37,7 +38,8 @@ export function PairSidebar({ activePair, exchange, marketType, favorites, toggl
 
   const rows = useMemo(() => {
     const needle = query.trim().toUpperCase();
-    return instruments
+    const ranked = sortByImportance(instruments, (base) => bySymbol.get(base)?.rank, exchange);
+    return ranked
       .filter((i) => {
         if (favOnly && !favorites.includes(i.pair)) return false;
         if (quote !== 'ALL' && i.quote !== quote) return false;

@@ -99,6 +99,20 @@ export class CcxtAdapter implements ExchangeAdapter {
   async getCatalog(marketType: MarketType): Promise<InstrumentMeta[]> {
     const cached = this.catalogs.get(marketType);
     if (cached) return cached;
+    // warm localStorage cache (1h TTL) makes repeat visits instant
+    try {
+      const raw = window.localStorage.getItem(`bityaris.catalog.${this.id}.${marketType}`);
+      if (raw) {
+        const parsed = JSON.parse(raw) as { at: number; list: InstrumentMeta[] };
+        if (parsed?.list?.length && Date.now() - parsed.at < 3_600_000) {
+          parsed.list.forEach((m) => this.symbolIndex.set(`${marketType}|${m.pair}`, m));
+          this.catalogs.set(marketType, parsed.list);
+          return parsed.list;
+        }
+      }
+    } catch {
+      /* ignore corrupt cache */
+    }
     const ex = await this.restClient();
     const markets = (await ex.loadMarkets(true)) as Record<string, AnyExchange>;
     const out: InstrumentMeta[] = [];
@@ -133,8 +147,16 @@ export class CcxtAdapter implements ExchangeAdapter {
       out.push(meta);
       this.symbolIndex.set(`${marketType}|${meta.pair}`, meta);
     }
-    out.sort((a, b) => a.pair.localeCompare(b.pair));
+    // keep venue order; UI sorts by importance (market cap / blue-chip first)
     this.catalogs.set(marketType, out);
+    try {
+      window.localStorage.setItem(
+        `bityaris.catalog.${this.id}.${marketType}`,
+        JSON.stringify({ at: Date.now(), list: out }),
+      );
+    } catch {
+      /* storage full/unavailable — memory cache still applies */
+    }
     return out;
   }
 

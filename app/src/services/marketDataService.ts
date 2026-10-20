@@ -218,15 +218,26 @@ class PairMarketStore {
   async loadSnapshot(key: string, interval: CandleInterval = '1d'): Promise<void> {
     const { pair } = splitKey(key);
     for (const adapter of this.healthyAdapters(key)) {
+      // paint the order book as soon as its own request lands, then stream
+      // the remaining panels in as they arrive (no all-or-nothing wait).
+      let painted = false;
       try {
-        const [ticker, book, trades, candles, funding, catalog] = await Promise.all([
+        const bookP = adapter.getOrderBook(key, 20);
+        void bookP
+          .then((book) => {
+            painted = true;
+            this.activeAdapter = adapter;
+            this.patch(key, { orderBook: book, source: adapter.id, state: 'live', lastSuccessAt: Date.now() });
+          })
+          .catch(() => undefined);
+        const [ticker, trades, candles, funding, catalog] = await Promise.all([
           adapter.getTicker(key),
-          adapter.getOrderBook(key, 20),
           adapter.getTrades(key, 40),
           adapter.getKlines(key, interval, 300),
           adapter.getFundingInfo(key),
           adapter.getCatalog(splitKey(key).marketType).catch(() => []),
         ]);
+        const book = await bookP;
         this.activeAdapter = adapter;
         this.patch(key, {
           ticker,
@@ -241,6 +252,7 @@ class PairMarketStore {
           lastSuccessAt: Date.now(),
           error: undefined,
         });
+        void painted;
         return;
       } catch (err) {
         this.noteFailure(adapter, err, key);

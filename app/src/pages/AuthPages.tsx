@@ -35,13 +35,7 @@ function AuthShell({ mode }: { mode: 'login' | 'signup' }): React.ReactElement {
     <div className="flex min-h-[calc(100vh-56px)] items-center justify-center bg-[#f7f8fa] px-4 py-12">
       <div className="w-full max-w-[400px] rounded-2xl bg-white p-8 shadow-pop">
         <div className="flex justify-center">
-          <span className="flex items-center gap-2">
-            <svg width="34" height="34" viewBox="0 0 64 64" aria-hidden="true">
-              <path d="M32 6 L54 18 V46 L32 58 L10 46 V18 Z" fill="none" stroke="#f0b90b" strokeWidth="5" strokeLinejoin="round" />
-              <path d="M32 21 L42 26.5 V37.5 L32 43 L22 37.5 V26.5 Z" fill="#f0b90b" />
-            </svg>
-            <span className="text-[22px] font-extrabold tracking-tight text-txt-dark">bityaris</span>
-          </span>
+          <Logo size={56} />
         </div>
         <h1 className="mt-6 text-center text-[20px] font-bold text-txt-dark">{mode === 'login' ? 'Log in' : 'Sign up'}</h1>
         <p className="mt-1 text-center text-[12px] text-txt-darksec">Simulated account — credentials never leave this browser.</p>

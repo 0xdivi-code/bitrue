@@ -18,6 +18,15 @@ import { Dropdown, MenuItem } from '../ui/Dropdown';
 import { Logo } from './Logo';
 import { cn } from '../../utils/format';
 
+function isActiveRoute(pathname: string, item: { to?: string; children?: Array<{ to: string }> }): boolean {
+  const targets = [item.to, ...(item.children?.map((c) => c.to) ?? [])].filter(Boolean) as string[];
+  return targets.some((to) => {
+    if (to === '/') return pathname === '/';
+    const root = to.split('/').slice(0, 2).join('/'); // e.g. /trade, /futures
+    return pathname === root || pathname.startsWith(`${root}/`);
+  });
+}
+
 export function Header(): React.ReactElement {
   const navigate = useNavigate();
   const location = useLocation();
@@ -29,10 +38,10 @@ export function Header(): React.ReactElement {
   return (
     <header className="sticky top-0 z-[100] bg-night-900 text-white">
       <div className="mx-auto flex h-14 max-w-[1440px] items-center gap-1 px-4">
-        <Logo />
+        <Logo size={36} />
 
         {/* desktop nav */}
-        <nav className="ml-6 hidden flex-1 items-center gap-0.5 lg:flex" aria-label="Primary">
+        <nav className="no-scrollbar ml-4 hidden min-w-0 flex-1 items-center gap-0.5 overflow-x-auto lg:flex xl:ml-6" aria-label="Primary">
           {NAV_ITEMS.map((item) =>
             item.children ? (
               <Dropdown
@@ -42,8 +51,8 @@ export function Header(): React.ReactElement {
                 trigger={(open) => (
                   <span
                     className={cn(
-                      'flex items-center gap-1 rounded-md px-2.5 py-1.5 text-[13px] font-medium transition-colors hover:text-accent',
-                      open ? 'text-accent' : 'text-white',
+                      'flex whitespace-nowrap items-center gap-1 rounded-md px-2.5 py-1.5 text-[13px] font-medium transition-colors hover:text-accent',
+                      open || isActiveRoute(location.pathname, item) ? 'text-accent' : 'text-white',
                     )}
                   >
                     {item.badge === 'New' ? (
@@ -96,8 +105,8 @@ export function Header(): React.ReactElement {
                 key={item.label}
                 to={item.to ?? '/'}
                 className={cn(
-                  'flex items-center gap-1 rounded-md px-2.5 py-1.5 text-[13px] font-medium transition-colors hover:text-accent',
-                  location.pathname === item.to ? 'text-accent' : 'text-white',
+                  'flex whitespace-nowrap items-center gap-1 rounded-md px-2.5 py-1.5 text-[13px] font-medium transition-colors hover:text-accent',
+                  isActiveRoute(location.pathname, item) ? 'text-accent' : 'text-white',
                 )}
               >
                 {item.badge === 'New' ? (
@@ -238,7 +247,7 @@ export function Header(): React.ReactElement {
           <div className="absolute inset-0 bg-black/60" onClick={() => setMobileOpen(false)} />
           <div className="absolute right-0 top-0 h-full w-[300px] overflow-y-auto bg-night-800 p-4 scroll-thin">
             <div className="mb-4 flex items-center justify-between">
-              <Logo />
+              <Logo size={36} />
               <button type="button" aria-label="Close menu" onClick={() => setMobileOpen(false)} className="p-1">
                 <X size={20} />
               </button>
@@ -248,7 +257,10 @@ export function Header(): React.ReactElement {
                 <div key={item.label}>
                   <button
                     type="button"
-                    className="flex w-full items-center justify-between rounded-md px-2 py-2.5 text-left text-[14px] font-medium hover:bg-night-600"
+                    className={cn(
+                      'flex w-full items-center justify-between rounded-md px-2 py-2.5 text-left text-[14px] font-medium hover:bg-night-600',
+                      isActiveRoute(location.pathname, item) && 'text-accent',
+                    )}
                     onClick={() => {
                       if (item.to) {
                         navigate(item.to);
