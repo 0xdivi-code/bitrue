@@ -1,36 +1,43 @@
 import React, { useMemo, useState } from 'react';
 import { Sparkles, X } from 'lucide-react';
-import { STRATEGY_CARDS, TRADING_PAIRS } from '../data/constants';
+import { STRATEGY_CARDS } from '../data/constants';
 import { useTradingPair } from '../hooks/useTradingPair';
 import { useTopMarkets } from '../hooks/useTopMarkets';
+import { mkKey, type ExchangeId } from '../types/marketDataTypes';
 import { ChartPanel } from '../components/trading/ChartPanel';
 import { OrderBookPanel } from '../components/trading/OrderBookPanel';
 import { OrderFormPanel } from '../components/trading/OrderFormPanel';
 import { OrdersBottomPanel } from '../components/trading/OrdersBottomPanel';
+import { CoinIcon } from '../components/market/CoinIcon';
 import { DataSourceBadge, Tabs } from '../components/ui/primitives';
-import { cn, formatCompact, formatNumber, formatPct } from '../utils/format';
+import { EXCHANGES } from '../components/trading/TickerHeader';
+import { cn, formatCompact, formatNumber, formatPct, formatTime } from '../utils/format';
 
-const TICKER_STRIP = ['BTC', 'ETH', 'XRP', 'SOL', 'DOGE', 'SUI', 'WLD', 'ZEC', 'XAU', 'XAG', 'PEPE', 'HYPE'];
+const STRIP = ['BTC', 'ETH', 'XRP', 'SOL', 'DOGE', 'SUI', 'WLD', 'LTC', 'LINK', 'AVAX', 'PEPE', 'TON'];
 
-/** Futures terminal: ticker strips, pair header, chart, book, order form, positions tabs, AI strategy cards. */
+/** Perpetual-futures terminal driven by live venue data (default: Binance USDS-M). */
 export default function FuturesPage(): React.ReactElement {
   const pair = 'btc_usdt';
-  const meta = useMemo(() => TRADING_PAIRS.find((p) => p.pair === pair)!, []);
-  const { state, sourceLabel, sourceState } = useTradingPair(pair);
+  const [exchange, setExchange] = useState<ExchangeId>('binance');
+  const storeKey = mkKey(exchange, 'swap', pair);
+  const { state, sourceLabel, sourceState } = useTradingPair(storeKey);
   const { bySymbol } = useTopMarkets();
   const [tab, setTab] = useState('positions');
   const [bannerOpen, setBannerOpen] = useState(true);
   const [picked, setPicked] = useState<number | null>(null);
   const t = state.ticker;
+  const f = state.funding;
+  const btc = bySymbol.get('BTC');
 
   const strip = (reverse = false) => (
-    <div className={cn('overflow-hidden border-b border-night-600 bg-night-800', reverse && 'border-t border-b-0')}>
+    <div className={cn('overflow-hidden border-b border-night-600 bg-night-800', reverse && 'border-b-0 border-t')}>
       <div className="ticker-track flex w-max gap-6 px-4 py-1.5">
-        {[...TICKER_STRIP, ...TICKER_STRIP].map((sym, i) => {
+        {[...STRIP, ...STRIP].map((sym, i) => {
           const a = bySymbol.get(sym);
           const up = (a?.change24hPct ?? 1) >= 0;
           return (
             <span key={`${sym}-${i}`} className="flex items-center gap-1.5 whitespace-nowrap text-[11px]">
+              <CoinIcon symbol={sym} size={14} logoUrl={a?.logoUrl} />
               <span className="font-semibold text-txt-primary">{sym}/USDT</span>
               <span className={cn('num font-semibold', up ? 'text-up' : 'text-down')}>{a ? formatPct(a.change24hPct) : '--'}</span>
               <span className="num text-txt-muted">{a ? formatCompact(a.priceUsd) : '--'}</span>
@@ -41,35 +48,58 @@ export default function FuturesPage(): React.ReactElement {
     </div>
   );
 
+  const countdown = useMemo(() => {
+    if (!f?.nextFundingTime) return '--';
+    const ms = f.nextFundingTime - Date.now();
+    if (ms <= 0) return '0:00:00';
+    const h = Math.floor(ms / 3600_000);
+    const m = Math.floor((ms % 3600_000) / 60_000);
+    const s = Math.floor((ms % 60_000) / 1000);
+    return `${h}:${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
+  }, [f?.nextFundingTime]);
+
   return (
     <div className="bg-night-900 text-txt-primary">
       {strip()}
 
       {/* pair header */}
-      <div className="flex flex-wrap items-center gap-x-6 gap-y-2 border-b border-night-600 bg-night-800 px-4 py-2.5">
-        <div className="flex items-center gap-2">
-          <span className="flex h-6 w-6 items-center justify-center rounded-full bg-[#f7931a] text-[11px] font-black text-white">₿</span>
-          <span className="text-[15px] font-bold">BTC/USDT Perpetual</span>
+      <div className="flex flex-wrap items-center gap-x-5 gap-y-2 border-b border-night-600 bg-night-800 px-3 py-2.5 md:px-4">
+        <div className="flex min-w-0 items-center gap-2">
+          <CoinIcon symbol="BTC" size={24} logoUrl={btc?.logoUrl} />
+          <span className="truncate text-[15px] font-bold">BTC/USDT Perpetual</span>
+          <select
+            value={exchange}
+            onChange={(e) => setExchange(e.target.value as ExchangeId)}
+            aria-label="Futures venue"
+            className="rounded-lg border border-night-500 bg-night-700 px-2 py-1 text-[11px] font-bold text-txt-secondary outline-none"
+          >
+            {EXCHANGES.map((e) => (
+              <option key={e.id} value={e.id}>
+                {e.label}
+              </option>
+            ))}
+          </select>
         </div>
         <span className={cn('num text-[18px] font-extrabold', (t?.change24hPct ?? 0) >= 0 ? 'text-up' : 'text-down')}>
-          {t ? formatNumber(t.last, 2) : '--'}
+          {t ? formatNumber(t.last, 1) : '--'}
         </span>
         {[
-          ['Mark Price', t ? formatNumber(t.last * 0.9999, 1) : '--'],
-          ['Index Price', t ? formatNumber(t.last * 0.9998, 1) : '--'],
-          ['Funding/Countdown', '0.0061% / 6:46:16'],
+          ['Mark Price', f?.markPrice ? formatNumber(f.markPrice, 1) : '--'],
+          ['Index Price', f?.indexPrice ? formatNumber(f.indexPrice, 1) : '--'],
+          ['Funding/Countdown', f?.fundingRate != null ? `${(f.fundingRate * 100).toFixed(4)}% / ${countdown}` : '--'],
           ['24h Chg', t ? formatPct(t.change24hPct) : '--'],
           ['24h High', t ? formatNumber(t.high24h, 1) : '--'],
           ['24h Low', t ? formatNumber(t.low24h, 1) : '--'],
           ['24h Vol(BTC)', t ? formatCompact(t.baseVolume24h) : '--'],
           ['24h Vol(USDT)', t ? formatCompact(t.quoteVolume24h) : '--'],
         ].map(([label, value]) => (
-          <div key={label}>
-            <div className="text-[10px] text-txt-muted">{label}</div>
-            <div className="num text-[12px] font-semibold text-txt-primary">{value}</div>
+          <div key={label} className="min-w-[84px]">
+            <div className="truncate text-[10px] text-txt-muted">{label}</div>
+            <div className="num truncate text-[12px] font-semibold text-txt-primary">{value}</div>
           </div>
         ))}
-        <div className="ml-auto">
+        <div className="ml-auto flex items-center gap-2">
+          {f && <span className="hidden text-[10px] text-txt-muted md:inline">next funding {f.nextFundingTime ? formatTime(f.nextFundingTime, false) : '--'}</span>}
           <DataSourceBadge state={sourceState} label={sourceLabel} />
         </div>
       </div>
@@ -82,14 +112,19 @@ export default function FuturesPage(): React.ReactElement {
               tone="dark"
               tabs={[
                 { id: 'chart', label: 'Chart' },
-                { id: 'info', label: 'Currency Information' },
+                { id: 'info', label: 'Contract Information' },
               ]}
               active="chart"
               onChange={() => undefined}
             />
           </div>
           <div className="h-[420px]">
-            <ChartPanel pair={pair} pricePrecision={1} lastLabel={t ? formatNumber(t.last, 1) : '--'} />
+            <ChartPanel
+              storeKey={storeKey}
+              symbolLabel={`BTC/USDT · ${exchange} perp`}
+              pricePrecision={1}
+              lastLabel={t ? formatNumber(t.last, 1) : '--'}
+            />
           </div>
 
           <div className="border-t border-night-600 px-2">
@@ -110,14 +145,15 @@ export default function FuturesPage(): React.ReactElement {
           </div>
           <div className="px-4 py-6 text-center text-[12px] text-txt-muted">
             {tab === 'positions'
-              ? 'No open positions — simulated futures positions will appear here once you place demo orders.'
-              : `The ${tab} table is part of the demo terminal and stays empty until simulated activity exists.`}
+              ? 'No open positions — demo futures positions appear here once simulated orders fill.'
+              : `The ${tab} table stays empty until simulated activity exists on this venue.`}
           </div>
 
           <div className="grid gap-4 border-t border-night-600 p-4 md:grid-cols-3">
             {STRATEGY_CARDS.map((s) => (
               <div key={s.id} className="rounded-xl border border-night-500 p-4">
                 <div className="flex items-center gap-2">
+                  <CoinIcon symbol="BTC" size={18} logoUrl={btc?.logoUrl} />
                   <Sparkles size={14} className="text-accent" />
                   <span className="text-[13px] font-bold">{s.pair}</span>
                   <span
@@ -140,7 +176,7 @@ export default function FuturesPage(): React.ReactElement {
                   <div className="flex justify-between"><dt>Min capital (USDT)</dt><dd className="num">{s.minCapital}</dd></div>
                   <div className="flex justify-between"><dt>Drawdown</dt><dd className="num">{s.drawdown}</dd></div>
                 </dl>
-                <button type="button" className="mt-3 w-full rounded-lg bg-accent py-1.5 text-[11px] font-bold text-night-900 hover:bg-accent-hover">
+                <button type="button" className="mt-3 w-full rounded-lg bg-accent py-1.5 text-[11px] font-bold text-night-900 transition-transform hover:bg-accent-hover active:scale-[.98]">
                   Run strategy (demo)
                 </button>
               </div>
@@ -171,7 +207,7 @@ export default function FuturesPage(): React.ReactElement {
               tone="dark"
               tabs={[
                 { id: 'futures', label: 'Futures Trading' },
-                { id: 'ai', label: <span className="inline-flex items-center gap-1">Orbitex AI <span className="rounded bg-accent px-1 text-[9px] font-bold text-night-900">New</span></span> },
+                { id: 'ai', label: <span className="inline-flex items-center gap-1">Bityaris AI <span className="rounded bg-accent px-1 text-[9px] font-bold text-night-900">New</span></span> },
                 { id: 'copy', label: 'Copy' },
               ]}
               active="futures"
@@ -179,10 +215,11 @@ export default function FuturesPage(): React.ReactElement {
             />
           </div>
           <div className="grid grid-cols-2 gap-2 px-3 py-2">
-            <button type="button" className="rounded-lg bg-night-500 py-1.5 text-[12px] font-bold text-accent">Cross</button>
-            <button type="button" className="rounded-lg bg-night-600 py-1.5 text-[12px] font-bold text-txt-secondary hover:text-txt-primary">5x</button>
+            <button type="button" className="rounded-lg bg-night-500 py-1.5 text-[12px] font-bold text-accent active:scale-[.98]">Cross</button>
+            <button type="button" className="rounded-lg bg-night-600 py-1.5 text-[12px] font-bold text-txt-secondary hover:text-txt-primary active:scale-[.98]">5x</button>
           </div>
           <OrderFormPanel
+            storeKey={storeKey}
             pair={pair}
             base="BTC"
             quote="USDT"
@@ -191,6 +228,9 @@ export default function FuturesPage(): React.ReactElement {
             bestAsk={state.orderBook?.asks[0]?.price}
             pricePrecision={1}
             amountPrecision={4}
+            minAmount={state.instrument?.minAmount}
+            minCost={state.instrument?.minCost}
+            venueLabel={`${exchange} perpetual`}
             pickedPrice={picked}
             market="futures"
           />
@@ -198,7 +238,7 @@ export default function FuturesPage(): React.ReactElement {
             <span>Liquidation Price: <span className="num text-txt-primary">--</span></span>
             <span className="text-right">Margin: <span className="num text-txt-primary">0 USDT</span></span>
           </div>
-          <button type="button" className="mx-3 mb-3 rounded-lg bg-night-600 py-2 text-[12px] font-bold text-accent hover:bg-night-500">
+          <button type="button" className="mx-3 mb-3 rounded-lg bg-night-600 py-2 text-[12px] font-bold text-accent hover:bg-night-500 active:scale-[.98]">
             Transfer
           </button>
         </div>
@@ -216,7 +256,7 @@ export default function FuturesPage(): React.ReactElement {
             <span className="flex items-center gap-1.5 text-[12px] font-bold text-accent">
               <Sparkles size={13} /> Popular Events
             </span>
-            <button type="button" aria-label="Close banner" onClick={() => setBannerOpen(false)} className="text-txt-muted hover:text-txt-primary">
+            <button type="button" aria-label="Close banner" onClick={() => setBannerOpen(false)} className="p-0.5 text-txt-muted hover:text-txt-primary">
               <X size={14} />
             </button>
           </div>

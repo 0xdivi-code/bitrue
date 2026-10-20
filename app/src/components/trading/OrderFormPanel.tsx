@@ -9,6 +9,7 @@ import { cn, formatNumber } from '../../utils/format';
 import type { OrderSide, OrderType } from '../../types/domain';
 
 export interface OrderFormPanelProps {
+  storeKey: string;
   pair: string;
   base: string;
   quote: string;
@@ -20,6 +21,9 @@ export interface OrderFormPanelProps {
   /** price injected by order-book clicks */
   pickedPrice: number | null;
   market: 'spot' | 'futures';
+  minAmount?: number;
+  minCost?: number;
+  venueLabel: string;
 }
 
 const PERCENTS = [0, 25, 50, 75, 100];
@@ -37,7 +41,7 @@ const TPSL_TEXT =
 
 /** Buy + sell order forms with Limit / Market / Trigger order types. */
 export function OrderFormPanel(props: OrderFormPanelProps): React.ReactElement {
-  const { pair, base, quote, lastPrice, bestBid, bestAsk, pricePrecision, amountPrecision, pickedPrice, market } = props;
+  const { storeKey, pair, base, quote, lastPrice, bestBid, bestAsk, pricePrecision, amountPrecision, pickedPrice, market, minAmount, minCost, venueLabel } = props;
   const { account } = useAuth();
   const { placeOrder } = useOrders();
   const { openModal } = useUi();
@@ -86,6 +90,10 @@ export function OrderFormPanel(props: OrderFormPanelProps): React.ReactElement {
           placeOrder={placeOrder}
           loggedIn={account.loggedIn}
           market={market}
+          storeKey={storeKey}
+          minAmount={minAmount}
+          minCost={minCost}
+          venueLabel={venueLabel}
         />
         <SideForm
           side="sell"
@@ -103,6 +111,10 @@ export function OrderFormPanel(props: OrderFormPanelProps): React.ReactElement {
           placeOrder={placeOrder}
           loggedIn={account.loggedIn}
           market={market}
+          storeKey={storeKey}
+          minAmount={minAmount}
+          minCost={minCost}
+          venueLabel={venueLabel}
         />
       </div>
     </div>
@@ -110,6 +122,10 @@ export function OrderFormPanel(props: OrderFormPanelProps): React.ReactElement {
 }
 
 interface SideFormProps {
+  storeKey: string;
+  minAmount?: number;
+  minCost?: number;
+  venueLabel: string;
   side: OrderSide;
   type: OrderType;
   pair: string;
@@ -176,7 +192,17 @@ function SideForm(p: SideFormProps): React.ReactElement {
       openModal('auth', { mode: 'login' });
       return;
     }
+    if (p.minAmount && amountNum < p.minAmount) {
+      setError(`Minimum order size on ${p.venueLabel}: ${p.minAmount} ${p.base}`);
+      return;
+    }
+    if (p.minCost && total < p.minCost) {
+      setError(`Minimum order value on ${p.venueLabel}: ${p.minCost} ${p.quote}`);
+      return;
+    }
     const res = p.placeOrder({
+      storeKey: p.storeKey,
+      venueLabel: p.venueLabel,
       pair: p.pair,
       side: p.side,
       type: p.type,
@@ -352,7 +378,7 @@ function SideForm(p: SideFormProps): React.ReactElement {
         )}
         {!p.loggedIn && (
           <p className="text-center text-[10px] text-txt-muted">
-            Demo notice: signing in creates a simulated account; orders never touch real funds.{' '}
+            Demo notice: simulated execution against {p.venueLabel} market rules — no order is routed to the venue and no real funds move.{' '}
             <button type="button" className="underline decoration-dotted" onClick={() => pushToast({ tone: 'info', title: 'Simulated environment', body: 'All balances, orders and fills on this page are generated locally in your browser.' })}>
               Why?
             </button>

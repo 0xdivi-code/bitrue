@@ -40,7 +40,7 @@ function AuthShell({ mode }: { mode: 'login' | 'signup' }): React.ReactElement {
               <path d="M32 6 L54 18 V46 L32 58 L10 46 V18 Z" fill="none" stroke="#f0b90b" strokeWidth="5" strokeLinejoin="round" />
               <path d="M32 21 L42 26.5 V37.5 L32 43 L22 37.5 V26.5 Z" fill="#f0b90b" />
             </svg>
-            <span className="text-[22px] font-extrabold tracking-tight text-txt-dark">orbitex</span>
+            <span className="text-[22px] font-extrabold tracking-tight text-txt-dark">bityaris</span>
           </span>
         </div>
         <h1 className="mt-6 text-center text-[20px] font-bold text-txt-dark">{mode === 'login' ? 'Log in' : 'Sign up'}</h1>

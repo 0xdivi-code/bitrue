@@ -80,11 +80,14 @@ export interface TradeTick {
 }
 
 export interface PairMarketState {
+  key: string; // "<exchange>|<marketType>|<pair>"
   pair: string;
   ticker: PairTicker | null;
   candles: Partial<Record<CandleInterval, Candle[]>>;
   orderBook: OrderBook | null;
   trades: TradeTick[];
+  funding: FundingInfo | null;
+  instrument: InstrumentMeta | null;
   source: string;
   state: DataSourceState;
   fetchedAt: number;
@@ -101,4 +104,50 @@ export interface TradingPairMeta {
   pricePrecision: number;
   amountPrecision: number;
   listed: boolean;
+}
+
+/* ------------------------- multi-venue instruments ------------------------- */
+
+export type MarketType = 'spot' | 'swap'; // swap = USDT/USDC-margined perpetual futures
+export type ExchangeId = 'binance' | 'bybit' | 'okx';
+
+/** Normalized instrument metadata fetched from an exchange market catalog. */
+export interface InstrumentMeta {
+  exchange: ExchangeId;
+  marketType: MarketType;
+  pair: string; // normalized "xrp_usdt"
+  symbol: string; // venue symbol, e.g. "XRP/USDT" or "XRP/USDT:USDT"
+  base: string;
+  quote: string;
+  settle?: string;
+  active: boolean;
+  tickSize?: number;
+  stepSize?: number;
+  minAmount?: number;
+  minCost?: number;
+  contractSize?: number;
+}
+
+export interface FundingInfo {
+  markPrice?: number;
+  indexPrice?: number;
+  fundingRate?: number;
+  nextFundingTime?: number;
+  interval?: string;
+  source: string;
+  updatedAt: number;
+}
+
+/** Composite store key: "<exchange>|<marketType>|<pair>". */
+export function mkKey(exchange: ExchangeId, marketType: MarketType, pair: string): string {
+  return `${exchange}|${marketType}|${pair}`;
+}
+
+export function splitKey(key: string): { exchange: ExchangeId; marketType: MarketType; pair: string } {
+  const [exchange, marketType, pair] = key.split('|');
+  return {
+    exchange: (exchange as ExchangeId) || 'binance',
+    marketType: (marketType as MarketType) || 'spot',
+    pair: pair || 'xrp_usdt',
+  };
 }

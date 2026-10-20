@@ -6,7 +6,7 @@
 import React, { createContext, useCallback, useContext, useMemo, useState } from 'react';
 import type { AccountState, Balance } from '../types/domain';
 
-const SESSION_KEY = 'orbitex.demo.session';
+const SESSION_KEY = 'bityaris.demo.session';
 
 const DEFAULT_BALANCES: Balance[] = [
   { symbol: 'USDT', available: 12500, locked: 0 },

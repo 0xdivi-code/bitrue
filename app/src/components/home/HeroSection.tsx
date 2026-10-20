@@ -42,7 +42,7 @@ export function HeroSection(): React.ReactElement {
       {/* left: headline + registration */}
       <div>
         <h1 className="text-[40px] font-extrabold leading-[1.15] tracking-tight text-txt-dark md:text-[46px]">
-          Join Orbitex, become the
+          Join Bityaris, become the
           <br />
           Next <span className="text-[#ff9f43]">Crypto Legend</span>
         </h1>

@@ -142,6 +142,8 @@ export function EtfSection(): React.ReactElement {
         </div>
       </div>
       <div className="mt-5 overflow-hidden rounded-2xl border border-bd-light bg-white shadow-card">
+        <div className="overflow-x-auto scroll-light">
+          <div className="min-w-[640px]">
         <div className="grid grid-cols-[1.4fr_1fr_1fr_.8fr] px-5 py-3 text-[12px] text-txt-darksec">
           <span>Top Traded Pairs</span>
           <span className="text-right">Price</span>
@@ -170,6 +172,8 @@ export function EtfSection(): React.ReactElement {
             </span>
           </div>
         ))}
+          </div>
+        </div>
       </div>
     </section>
   );
@@ -184,7 +188,7 @@ export function EarnLoansSection(): React.ReactElement {
       <div className="rounded-2xl bg-gradient-to-br from-[#fff8e6] to-[#ffedd2] p-6">
         <div className="flex items-center gap-2">
           <PiggyBank size={18} className="text-accent-deep" />
-          <h2 className="text-[18px] font-bold text-txt-dark">Orbitex Earn</h2>
+          <h2 className="text-[18px] font-bold text-txt-dark">Bityaris Earn</h2>
         </div>
         <p className="mt-2 text-[13px] text-txt-darksec">Flexible staking, locked products and daily reward payouts.</p>
         <ul className="mt-4 space-y-2 text-[13px] text-txt-dark">
@@ -199,7 +203,7 @@ export function EarnLoansSection(): React.ReactElement {
       <div className="rounded-2xl bg-gradient-to-br from-[#eef3ff] to-[#dfe9ff] p-6">
         <div className="flex items-center gap-2">
           <Landmark size={18} className="text-[#274bdb]" />
-          <h2 className="text-[18px] font-bold text-txt-dark">Orbitex Loans</h2>
+          <h2 className="text-[18px] font-bold text-txt-dark">Bityaris Loans</h2>
         </div>
         <p className="mt-2 text-[13px] text-txt-darksec">Borrow a wide range of cryptocurrencies against your collateral.</p>
         <ul className="mt-4 space-y-2 text-[13px] text-txt-dark">
@@ -325,7 +329,7 @@ export function CommunitySection(): React.ReactElement {
   return (
     <section className="border-t border-bd-light bg-[#f7f8fa] py-12">
       <div className="mx-auto max-w-shell px-4">
-        <h2 className="text-[22px] font-bold text-txt-dark">Join the Orbitex Community</h2>
+        <h2 className="text-[22px] font-bold text-txt-dark">Join the Bityaris Community</h2>
         <div className="mt-5 grid gap-4 md:grid-cols-2">
           <div className="rounded-2xl bg-white p-5 shadow-card">
             <Users size={18} className="text-txt-darksec" />

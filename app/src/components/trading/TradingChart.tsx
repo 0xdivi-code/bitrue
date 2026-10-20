@@ -11,13 +11,14 @@ import type { CandleInterval } from '../../types/marketDataTypes';
 import {
   createTradingViewDatafeed,
   intervalToResolution,
-  symbolInfoForPair,
+  symbolInfoForStoreKey,
   type ChartSymbolInfo,
 } from '../../services/tradingViewDatafeed';
 import { cn } from '../../utils/format';
 
 export interface TradingChartProps {
-  pair: string;
+  /** composite store key "<exchange>|<marketType>|<pair>" */
+  storeKey: string;
   interval: CandleInterval;
   pricePrecision: number;
   onCrosshairPrice?: (price: number | null) => void;
@@ -38,7 +39,7 @@ interface Bar {
  * datafeed adapter (getBars + subscribeBars). Swap-in point for the licensed
  * Advanced Charts widget: the same datafeed satisfies its IDatafeedChartApi.
  */
-export function TradingChart({ pair, interval, pricePrecision, onCrosshairPrice, className }: TradingChartProps): React.ReactElement {
+export function TradingChart({ storeKey, interval, pricePrecision, onCrosshairPrice, className }: TradingChartProps): React.ReactElement {
   const containerRef = useRef<HTMLDivElement>(null);
   const chartRef = useRef<IChartApi | null>(null);
   const candleRef = useRef<ISeriesApi<'Candlestick'> | null>(null);
@@ -95,7 +96,7 @@ export function TradingChart({ pair, interval, pricePrecision, onCrosshairPrice,
     });
 
     const datafeed = createTradingViewDatafeed();
-    const symbol: ChartSymbolInfo = symbolInfoForPair(pair, pricePrecision);
+    const symbol: ChartSymbolInfo = symbolInfoForStoreKey(storeKey, pricePrecision);
     const resolution = intervalToResolution(interval);
     setStatus('loading');
 
@@ -122,7 +123,7 @@ export function TradingChart({ pair, interval, pricePrecision, onCrosshairPrice,
         chart.timeScale().fitContent();
         setStatus('ready');
 
-        listenerRef.current = `lis-${pair}-${interval}`;
+        listenerRef.current = `lis-${storeKey}-${interval}`;
         datafeed.subscribeBars(
           symbol,
           resolution,
@@ -151,7 +152,7 @@ export function TradingChart({ pair, interval, pricePrecision, onCrosshairPrice,
       chart.remove();
       chartRef.current = null;
     };
-  }, [pair, interval, pricePrecision, onCrosshairPrice]);
+  }, [storeKey, interval, pricePrecision, onCrosshairPrice]);
 
   return (
     <div className={cn('relative h-full w-full', className)}>

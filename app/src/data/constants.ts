@@ -2,8 +2,9 @@ import type { TradingPairMeta } from '../types/marketDataTypes';
 import type { Announcement, FaqItem, PromoCard, StrategyCard } from '../types/domain';
 
 export const BRAND = {
-  name: 'Orbitex',
+  name: 'Bityaris',
   tagline: 'Built for what traders need next',
+  logoUrl: 'https://i.postimg.cc/6QzR8npH/log0.png',
   demoNotice: 'Demo environment — all accounts, balances and orders are simulated.',
 };
 
@@ -297,8 +298,8 @@ export const FOOTER_COLUMNS: Array<{ title: string; links: Array<{ label: string
       { label: 'Listing Application', to: '/placeholder/listing' },
       { label: 'Submit a Request', to: '/placeholder/request' },
       { label: 'Locate a Lost Deposit', to: '/placeholder/lost-deposit' },
-      { label: 'support@orbitex.demo', to: '/placeholder/support-email' },
-      { label: 'pr@orbitex.demo', to: '/placeholder/pr-email' },
+      { label: 'support@bityaris.demo', to: '/placeholder/support-email' },
+      { label: 'pr@bityaris.demo', to: '/placeholder/pr-email' },
     ],
   },
 ];

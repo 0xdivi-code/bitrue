@@ -22,13 +22,14 @@ import { useUi } from '../../state/UiContext';
 const INTERVALS: CandleInterval[] = ['1m', '5m', '15m', '30m', '1h', '4h', '1d', '1w'];
 
 export interface ChartPanelProps {
-  pair: string;
+  storeKey: string;
+  symbolLabel: string;
   pricePrecision: number;
   lastLabel: string;
 }
 
 /** Chart region: interval/tool toolbar, chart-type + depth toggle, chart body. */
-export function ChartPanel({ pair, pricePrecision, lastLabel }: ChartPanelProps): React.ReactElement {
+export function ChartPanel({ storeKey, symbolLabel, pricePrecision, lastLabel }: ChartPanelProps): React.ReactElement {
   const [interval, setInterval_] = useState<CandleInterval>('1d');
   const [chartType, setChartType] = useState<'candles' | 'line' | 'area'>('candles');
   const [view, setView] = useState<'chart' | 'depth'>('chart');
@@ -122,7 +123,7 @@ export function ChartPanel({ pair, pricePrecision, lastLabel }: ChartPanelProps)
 
       <div className="flex items-center gap-3 px-3 py-1.5 text-[11px] text-txt-secondary">
         <span className="font-semibold text-txt-primary">
-          {pair.toUpperCase().replace('_', '/')} · {interval}
+          {symbolLabel} · {interval}
         </span>
         <span className="num text-up">{lastLabel}</span>
         <span className="ml-auto flex items-center gap-1 text-txt-muted">
@@ -133,7 +134,7 @@ export function ChartPanel({ pair, pricePrecision, lastLabel }: ChartPanelProps)
 
       <div className="min-h-[320px] flex-1">
         {view === 'chart' ? (
-          <TradingChart pair={pair} interval={interval} pricePrecision={pricePrecision} />
+          <TradingChart storeKey={storeKey} interval={interval} pricePrecision={pricePrecision} />
         ) : (
           <DepthPlaceholder />
         )}

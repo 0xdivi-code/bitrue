@@ -120,6 +120,8 @@ export function MarketTabsTable(): React.ReactElement {
       </div>
 
       <div className="mt-4 overflow-hidden rounded-2xl border border-bd-light bg-white shadow-card">
+        <div className="overflow-x-auto scroll-light">
+          <div className="min-w-[760px]">
         <div className="grid grid-cols-[2fr_1.2fr_1fr_1.2fr_1.2fr_1fr] items-center gap-2 border-b border-bd-light px-5 py-3 text-[12px] text-txt-darksec">
           <span>{sortBtn('rank', 'Top Traded Pairs')}</span>
           <span className="text-right">{sortBtn('price', 'Price')}</span>
@@ -171,9 +173,11 @@ export function MarketTabsTable(): React.ReactElement {
             </button>
           ))
         )}
+          </div>
+        </div>
       </div>
 
-      <div className="mt-3 flex items-center justify-between text-[11px] text-txt-darksec">
+      <div className="mt-3 flex flex-wrap items-center justify-between gap-2 text-[11px] text-txt-darksec">
         <DataSourceBadge tone="light" state={snapshot.state} label={`${snapshot.source} · top 50 by market cap`} />
         <span>
           {snapshot.lastSuccessAt

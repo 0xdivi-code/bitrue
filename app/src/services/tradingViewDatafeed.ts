@@ -13,8 +13,9 @@
  * from the exchange adapters / simulated fallback via `pairMarketStore`.
  */
 import type { Candle, CandleInterval } from '../types/marketDataTypes';
+import { mkKey, splitKey } from '../types/marketDataTypes';
 import { pairMarketStore } from './marketDataService';
-import { intervalMs } from './exchangeAdapters';
+import { intervalMs } from './adapterTypes';
 
 export const SUPPORTED_RESOLUTIONS = ['1', '5', '15', '30', '60', '240', '1D', '1W'] as const;
 export type Resolution = (typeof SUPPORTED_RESOLUTIONS)[number];
@@ -112,13 +113,14 @@ export interface TradingViewDatafeed {
   unsubscribeBars(listenerGuid: string): void;
 }
 
-/** Normalized pair key ("xrp_usdt") → symbol info. */
-export function symbolInfoForPair(pair: string, pricePrecision = 5): ChartSymbolInfo {
+/** Store key ("<ex>|<market>|<pair>") → TradingView symbol info. */
+export function symbolInfoForStoreKey(key: string, pricePrecision = 5): ChartSymbolInfo {
+  const { exchange, marketType, pair } = splitKey(key);
   const [base, quote] = pair.toUpperCase().split('_');
   return {
-    name: pair,
-    ticker: `${base}${quote}`,
-    description: `${base}/${quote} Spot`,
+    name: key,
+    ticker: `${exchange.toUpperCase()}:${base}${quote}${marketType === 'swap' ? 'P' : ''}`,
+    description: `${base}/${quote} · ${exchange} ${marketType === 'swap' ? 'perpetual' : 'spot'}`,
     type: 'crypto',
     session: '24x7',
     timezone: 'Etc/UTC',
@@ -128,6 +130,11 @@ export function symbolInfoForPair(pair: string, pricePrecision = 5): ChartSymbol
     supported_resolutions: [...SUPPORTED_RESOLUTIONS],
     volume_precision: 2,
   };
+}
+
+/** Back-compat: plain pair defaults to the preferred exchange, spot market. */
+export function symbolInfoForPair(pair: string, pricePrecision = 5): ChartSymbolInfo {
+  return symbolInfoForStoreKey(mkKey(pairMarketStore.getPreferredExchange(), 'spot', pair), pricePrecision);
 }
 
 export function createTradingViewDatafeed(): TradingViewDatafeed {
@@ -148,6 +155,10 @@ export function createTradingViewDatafeed(): TradingViewDatafeed {
     },
 
     resolveSymbol(symbolName, onResolve, onError) {
+      if (symbolName.includes('|')) {
+        setTimeout(() => onResolve(symbolInfoForStoreKey(symbolName)), 0);
+        return;
+      }
       const pair = symbolName.toLowerCase().replace(/[-/]/g, '_');
       if (!/^[a-z0-9]+_[a-z0-9]+$/.test(pair)) {
         onError('invalid symbol');

@@ -47,7 +47,7 @@ export function DownloadModal({ open, onClose }: { open: boolean; onClose: () =>
     });
 
   return (
-    <Modal open={open} onClose={onClose} title="Download Orbitex App" width={380}>
+    <Modal open={open} onClose={onClose} title="Download Bityaris App" width={380}>
       <div className="flex flex-col items-center pt-2">
         <div className="rounded-xl border border-bd-light p-3">
           <QrArt />

@@ -15,6 +15,9 @@ import { useUi } from './UiContext';
 
 export interface NewOrderInput {
   pair: string;
+  /** composite market-data key "<exchange>|<marketType>|<pair>" */
+  storeKey: string;
+  venueLabel?: string;
   side: OrderSide;
   type: OrderType;
   price?: number;
@@ -51,7 +54,7 @@ export function OrdersProvider({ children }: { children: React.ReactNode }): Rea
       if (!account.loggedIn) return { ok: false, error: 'auth-required' };
       if (!Number.isFinite(input.amount) || input.amount <= 0) return { ok: false, error: 'Enter a valid amount' };
       const [base, quote] = input.pair.toUpperCase().split('_');
-      const ticker = pairMarketStore.getState(input.pair).ticker;
+      const ticker = pairMarketStore.getState(input.storeKey).ticker;
       const last = ticker?.last ?? 0;
 
       if (input.type === 'limit' && (!input.price || input.price <= 0))
@@ -74,6 +77,7 @@ export function OrdersProvider({ children }: { children: React.ReactNode }): Rea
       const order: Order = {
         id: nextId(),
         pair: input.pair,
+        storeKey: input.storeKey,
         side: input.side,
         type: input.type,
         price: input.price,
@@ -86,6 +90,7 @@ export function OrdersProvider({ children }: { children: React.ReactNode }): Rea
         updatedAt: Date.now(),
         tpSl: input.tpSl,
         market: input.market ?? 'spot',
+        venueLabel: input.venueLabel,
         simulated: true,
       };
 
@@ -144,12 +149,13 @@ export function OrdersProvider({ children }: { children: React.ReactNode }): Rea
       if (!orders.length) return;
       const prices = new Map<string, number>();
       orders.forEach((o) => {
-        if (!prices.has(o.pair)) prices.set(o.pair, pairMarketStore.getState(o.pair).ticker?.last ?? 0);
+        const k = o.storeKey ?? `binance|spot|${o.pair}`;
+        if (!prices.has(o.id)) prices.set(o.id, pairMarketStore.getState(k).ticker?.last ?? 0);
       });
       const filled: Order[] = [];
       const triggered: Order[] = [];
       orders.forEach((o) => {
-        const last = prices.get(o.pair) ?? 0;
+        const last = prices.get(o.id) ?? 0;
         if (!last) return;
         if (o.type === 'trigger') {
           const crossed =
@@ -182,7 +188,7 @@ export function OrdersProvider({ children }: { children: React.ReactNode }): Rea
             pushToast({
               tone: 'success',
               title: 'Simulated order filled',
-              body: `${o.side} ${o.amount} ${o.pair.toUpperCase().replace('_', '/')} @ ${o.price} — demo execution.`,
+              body: `${o.side} ${o.amount} ${o.pair.toUpperCase().replace('_', '/')} @ ${o.price} — demo execution (no order sent to ${o.venueLabel ?? 'any venue'}).`,
             });
           } else if (t) {
             remain.push({ ...o, status: 'triggered', updatedAt: Date.now() });

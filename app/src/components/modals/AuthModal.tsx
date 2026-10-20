@@ -85,7 +85,7 @@ export function AuthModal({ open, initialMode = 'login', onClose, onDone }: Auth
         <p className="mt-1 text-[12px] text-txt-darksec">
           {mode === 'forgot'
             ? 'Enter your email to receive a simulated reset link.'
-            : 'Welcome to Orbitex — demo accounts only, no real funds.'}
+            : 'Welcome to Bityaris — demo accounts only, no real funds.'}
         </p>
 
         <div className="mt-5 space-y-3">

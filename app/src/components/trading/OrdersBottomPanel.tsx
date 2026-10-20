@@ -24,7 +24,8 @@ export function OrdersBottomPanel(): React.ReactElement {
     return account.balances.filter((b) => !q || b.symbol.includes(q));
   }, [account.balances, assetQuery]);
 
-  const cols = 'grid grid-cols-[1.3fr_1fr_.8fr_.6fr_1fr_1fr_.8fr_.8fr_.8fr_1fr_.8fr] gap-2 px-4 py-2 text-[11px]';
+  const cols =
+    'grid min-w-[980px] grid-cols-[1.3fr_1fr_.8fr_.6fr_1fr_1fr_.8fr_.8fr_.8fr_1fr_.8fr] gap-2 px-4 py-2 text-[11px]';
 
   const OrderRow = ({ o, withAction }: { o: Order; withAction?: boolean }) => {
     const [base, quote] = o.pair.toUpperCase().split('_');
@@ -141,22 +142,26 @@ export function OrdersBottomPanel(): React.ReactElement {
         openOrders.length === 0 ? (
           <EmptyState tone="dark" title="No open orders — simulated limit and trigger orders appear here." />
         ) : (
-          <div>
-            <Header />
-            {openOrders.map((o) => (
-              <OrderRow key={o.id} o={o} withAction />
-            ))}
+          <div className="overflow-x-auto scroll-thin">
+            <div>
+              <Header />
+              {openOrders.map((o) => (
+                <OrderRow key={o.id} o={o} withAction />
+              ))}
+            </div>
           </div>
         )
       ) : tab === 'history' ? (
         recentHistory.length === 0 ? (
           <EmptyState tone="dark" title="No orders in the last 24 hours." />
         ) : (
-          <div>
-            <Header />
-            {recentHistory.map((o) => (
-              <OrderRow key={o.id} o={o} />
-            ))}
+          <div className="overflow-x-auto scroll-thin">
+            <div>
+              <Header />
+              {recentHistory.map((o) => (
+                <OrderRow key={o.id} o={o} />
+              ))}
+            </div>
           </div>
         )
       ) : (

@@ -7,6 +7,8 @@ export type OrderStatus = 'open' | 'filled' | 'canceled' | 'partially-filled' | 
 export interface Order {
   id: string;
   pair: string;
+  storeKey?: string;
+  venueLabel?: string;
   side: OrderSide;
   type: OrderType;
   price?: number; // limit price (limit & trigger orders)

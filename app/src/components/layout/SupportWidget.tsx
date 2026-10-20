@@ -21,7 +21,7 @@ export function SupportWidget(): React.ReactElement {
   const [messages, setMessages] = useState<Msg[]>([
     {
       from: 'bot',
-      text: 'Hi there 👋 Welcome to Orbitex support. This is a simulated assistant — how can I help you today?',
+      text: 'Hi there 👋 Welcome to Bityaris support. This is a simulated assistant — how can I help you today?',
       at: Date.now(),
     },
   ]);
@@ -60,7 +60,7 @@ export function SupportWidget(): React.ReactElement {
         <div className="fixed bottom-24 right-6 z-[140] flex h-[420px] w-[min(340px,92vw)] flex-col overflow-hidden rounded-2xl border border-bd-dark bg-night-800 shadow-pop">
           <div className="flex items-center justify-between border-b border-bd-dark px-4 py-3">
             <div>
-              <div className="text-[13px] font-semibold text-txt-primary">Orbitex Support</div>
+              <div className="text-[13px] font-semibold text-txt-primary">Bityaris Support</div>
               <div className="text-[11px] text-txt-secondary">Simulated assistant · typically replies instantly</div>
             </div>
             <span className="flex items-center gap-1 text-[10px] font-semibold uppercase text-up">

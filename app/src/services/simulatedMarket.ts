@@ -206,6 +206,8 @@ function bookScale(pair: string): number {
   return 220000 / price;
 }
 
+let tradeSeq = 0;
+
 export function simulatedTrades(pair: string, limit = 40): TradeTick[] {
   const mid = simulatedPriceStatic(pair);
   const rng = seededRandom(hashString(pair + ':trades') ^ (Math.floor(Date.now() / 1500) & 0xffff));
@@ -214,7 +216,7 @@ export function simulatedTrades(pair: string, limit = 40): TradeTick[] {
   for (let i = 0; i < limit; i++) {
     const price = mid * (1 + (rng() - 0.5) * 0.0012);
     out.push({
-      id: `${pair}-${now - i * 1400}-${i}`,
+      id: `${pair}-${now - i * 1400}-${i}-${tradeSeq++}`,
       pair,
       price,
       amount: round((rng() * 0.8 + 0.02) * bookScale(pair) * 0.06, 4),

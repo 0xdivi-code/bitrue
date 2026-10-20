@@ -12,7 +12,7 @@ export interface CacheEntry<T> {
 
 const memory = new Map<string, CacheEntry<unknown>>();
 
-const PREFIX = 'orbitex.cache.';
+const PREFIX = 'bityaris.cache.';
 
 export function cacheGet<T>(key: string, maxAgeMs: number): { entry: CacheEntry<T>; stale: boolean } | null {
   const mem = memory.get(key) as CacheEntry<T> | undefined;

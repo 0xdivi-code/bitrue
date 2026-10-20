@@ -35,6 +35,7 @@ export default {
       },
       fontFamily: {
         sans: [
+          'HarmonyOS Sans',
           'Inter',
           '-apple-system',
           'BlinkMacSystemFont',
