@@ -37,6 +37,8 @@ export interface NavItem {
   label: string;
   to?: string;
   badge?: string;
+  /** visibility / responsive helpers applied to the nav entry */
+  className?: string;
   children?: NavChild[];
 }
 

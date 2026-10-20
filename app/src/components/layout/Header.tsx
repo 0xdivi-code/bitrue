@@ -41,17 +41,17 @@ export function Header(): React.ReactElement {
         <Logo size={36} />
 
         {/* desktop nav */}
-        <nav className="no-scrollbar ml-4 hidden min-w-0 flex-1 items-center gap-0.5 overflow-x-auto lg:flex xl:ml-6" aria-label="Primary">
+        <nav className="ml-3 hidden min-w-0 flex-1 items-center gap-0.5 lg:flex xl:ml-6" aria-label="Primary">
           {NAV_ITEMS.map((item) =>
             item.children ? (
+              <span key={item.label} className={cn('relative', item.className)}>
               <Dropdown
-                key={item.label}
                 hover
                 width={300}
                 trigger={(open) => (
                   <span
                     className={cn(
-                      'flex whitespace-nowrap items-center gap-1 rounded-md px-2.5 py-1.5 text-[13px] font-medium transition-colors hover:text-accent',
+                      'flex whitespace-nowrap items-center gap-1 rounded-md px-2 py-1.5 text-[12px] font-medium transition-colors hover:text-accent xl:px-2.5 xl:text-[13px]',
                       open || isActiveRoute(location.pathname, item) ? 'text-accent' : 'text-white',
                     )}
                   >
@@ -100,12 +100,13 @@ export function Header(): React.ReactElement {
                   </div>
                 )}
               </Dropdown>
+              </span>
             ) : (
               <Link
                 key={item.label}
                 to={item.to ?? '/'}
                 className={cn(
-                  'flex whitespace-nowrap items-center gap-1 rounded-md px-2.5 py-1.5 text-[13px] font-medium transition-colors hover:text-accent',
+                  'flex whitespace-nowrap items-center gap-1 rounded-md px-2 py-1.5 text-[12px] font-medium transition-colors hover:text-accent xl:px-2.5 xl:text-[13px]',
                   isActiveRoute(location.pathname, item) ? 'text-accent' : 'text-white',
                 )}
               >
