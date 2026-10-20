@@ -13,6 +13,8 @@ export interface PairSidebarProps {
   marketType: MarketType;
   favorites: string[];
   toggleFavorite: (pair: string) => void;
+  /** route prefix for navigation, e.g. '/trade' or '/futures' */
+  basePath?: string;
 }
 
 /**
@@ -20,10 +22,10 @@ export interface PairSidebarProps {
  * (spot pairs or linear perpetuals). Prices prefer the venue's own cached
  * ticker; otherwise a clearly-marked global USD reference is shown.
  */
-export function PairSidebar({ activePair, exchange, marketType, favorites, toggleFavorite }: PairSidebarProps): React.ReactElement {
+export function PairSidebar({ activePair, exchange, marketType, favorites, toggleFavorite, basePath = '/trade' }: PairSidebarProps): React.ReactElement {
   const navigate = useNavigate();
   const { bySymbol } = useTopMarkets();
-  const { instruments, loading, reload } = useInstruments(exchange, marketType);
+  const { instruments, loading, reload, fromFallback } = useInstruments(exchange, marketType);
   const [query, setQuery] = useState('');
   const [quote, setQuote] = useState<string>('ALL');
   const [favOnly, setFavOnly] = useState(false);
@@ -42,7 +44,7 @@ export function PairSidebar({ activePair, exchange, marketType, favorites, toggl
         if (needle && !`${i.base}/${i.quote}`.includes(needle)) return false;
         return true;
       })
-      .slice(0, 80);
+      .slice(0, 140);
   }, [instruments, query, quote, favOnly, favorites]);
 
   const priceOf = (i: InstrumentMeta): { price: number; chg: number; venue: boolean } => {
@@ -54,7 +56,11 @@ export function PairSidebar({ activePair, exchange, marketType, favorites, toggl
   };
 
   const go = (pair: string) =>
-    navigate(`/trade/${pair}${marketType === 'swap' ? `?ex=${exchange}&m=swap` : `?ex=${exchange}`}`);
+    navigate(
+      basePath === '/futures'
+        ? `/futures/${pair}?ex=${exchange}`
+        : `${basePath}/${pair}?ex=${exchange}${marketType === 'swap' ? '&m=swap' : ''}`,
+    );
 
   return (
     <div className="flex h-full flex-col bg-night-800">
@@ -113,7 +119,10 @@ export function PairSidebar({ activePair, exchange, marketType, favorites, toggl
       </div>
 
       <div className="grid grid-cols-[1.6fr_1fr_.8fr] px-3 py-1 text-[10px] text-txt-muted">
-        <span>Pair · {exchange}</span>
+        <span>
+          Pair · {exchange}
+          {fromFallback && <span className="ml-1 rounded bg-night-600 px-1 text-[8px] uppercase text-txt-muted">built-in</span>}
+        </span>
         <span className="text-right">Price</span>
         <span className="text-right">24h</span>
       </div>

@@ -37,6 +37,7 @@ export default function App(): React.ReactElement {
                 <Route path="/" element={<HomePage />} />
                 <Route path="/trade/:pair" element={<SpotTradingPage />} />
                 <Route path="/futures" element={<FuturesPage />} />
+                <Route path="/futures/:pair" element={<FuturesPage />} />
                 <Route path="/buy-usdt" element={<BuyCryptoPage />} />
                 <Route path="/login" element={<LoginPage />} />
                 <Route path="/signup" element={<SignupPage />} />

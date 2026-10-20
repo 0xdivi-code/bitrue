@@ -99,6 +99,8 @@ const ROUTES = [
   '/trade/xrp_usdt',
   '/trade/btc_usdt',
   '/futures',
+  '/futures/eth_usdt',
+  '/trade/xrp_usdt?ex=okx&m=swap',
   '/buy-usdt',
   '/login',
   '/signup',

@@ -15,16 +15,18 @@ export function PairSelectorModal({
   exchange,
   marketType,
   onClose,
+  basePath = '/trade',
 }: {
   open: boolean;
   activePair: string;
   exchange: ExchangeId;
   marketType: MarketType;
   onClose: () => void;
+  basePath?: string;
 }): React.ReactElement {
   const navigate = useNavigate();
   const { bySymbol } = useTopMarkets();
-  const { instruments, loading } = useInstruments(exchange, marketType);
+  const { instruments, loading, fromFallback } = useInstruments(exchange, marketType);
   const [query, setQuery] = useState('');
   const [quote, setQuote] = useState('ALL');
 
@@ -34,7 +36,7 @@ export function PairSelectorModal({
     const needle = query.trim().toUpperCase();
     return instruments
       .filter((i) => (quote === 'ALL' || i.quote === quote) && (!needle || `${i.base}/${i.quote}`.includes(needle)))
-      .slice(0, 120);
+      .slice(0, 240);
   }, [instruments, query, quote]);
 
   const priceOf = (pair: string, base: string) => {
@@ -45,7 +47,7 @@ export function PairSelectorModal({
   };
 
   return (
-    <Modal open={open} onClose={onClose} title={`Select Market · ${exchange} ${marketType === 'swap' ? 'perpetual' : 'spot'}`} width={680} tone="dark">
+    <Modal open={open} onClose={onClose} title={`Select Market · ${exchange} ${marketType === 'swap' ? 'perpetual' : 'spot'}`} width={720} tone="dark">
       <div className="pt-2">
         <div className="flex flex-wrap items-center gap-2">
           <div className="relative min-w-[180px] flex-1">
@@ -102,7 +104,11 @@ export function PairSelectorModal({
                   key={i.symbol}
                   type="button"
                   onClick={() => {
-                    navigate(`/trade/${i.pair}?ex=${exchange}${marketType === 'swap' ? '&m=swap' : ''}`);
+                    navigate(
+                      basePath === '/futures'
+                        ? `/futures/${i.pair}?ex=${exchange}`
+                        : `${basePath}/${i.pair}?ex=${exchange}${marketType === 'swap' ? '&m=swap' : ''}`,
+                    );
                     onClose();
                   }}
                   className={cn(
@@ -130,7 +136,9 @@ export function PairSelectorModal({
           )}
         </div>
         <p className="mt-2 text-[10px] text-txt-muted">
-          Catalog loaded live from {exchange}. Tick/step sizes and minimums are enforced by the order form.
+          {fromFallback
+            ? `Built-in wide market list for ${exchange} (venue catalog unreachable right now). Tick/step conventions applied.`
+            : `Catalog loaded live from ${exchange} (${instruments.length} instruments). Tick/step sizes and minimums are enforced by the order form.`}
         </p>
       </div>
     </Modal>
